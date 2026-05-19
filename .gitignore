@@ -1,0 +1,62 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Environment variables (secrets)
+.env
+.env.local
+.env.production
+server/.env
+server/.env.local
+
+# Database
+server/data/
+*.db
+
+# Node.js local binary (deployment)
+server/bin/
+server/node
+server/node.pid
+server/node.log
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Tool / agent logs（追加）
+.claude/
+.playwright-mcp/
+firebase-debug.log
+client_debug.log
+client.log
+
+# Root test files
+root-test.txt
+root-lp/
+
+# Build artifacts
+dist-ssr/
+
+# Deployment scripts with credentials (FTP password等を含む・絶対公開禁止)
+server/upload_lolipop.sh
+server/upload_xserver.sh
+server/yarn.tar.gz
+server/yarn_install_final.php
+server/yarn_install_v2.php

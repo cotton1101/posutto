@@ -1,0 +1,35 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /posutto/
+
+  # Pass Authorization header to PHP (required for CGI/FastCGI mode)
+  RewriteCond %{HTTP:Authorization} .+
+  RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+  # --- Security: Block direct access to server files (except .php) ---
+  # Block .env, sensitive config files
+  RewriteRule ^server/\.env$ - [F,L]
+  # Block data directory (DB, backups)
+  RewriteRule ^server/data/ - [F,L]
+  # Block compiled JS directory
+  RewriteRule ^server/dist/ - [F,L]
+  # Block node_modules
+  RewriteRule ^server/node_modules/ - [F,L]
+  # Block source and config files by extension
+  RewriteRule ^server/.*\.(ts|js|json|sh|db|log|bak|sql|lock|md)$ - [F,L]
+
+  # --- For SPA Routing ---
+  # If the request is not for a real file or directory, serve index.html
+  # But EXCLUDE /api/ path so it reaches the backend or returns a 404
+  RewriteCond %{REQUEST_URI} !^/posutto/api/ [NC]
+  RewriteRule ^index\.html$ - [L]
+
+  # Handle API requests via PHP Proxy (Node.js Workaround)
+  RewriteCond %{REQUEST_URI} ^/posutto/api/ [NC]
+  RewriteRule ^api/(.*)$ server/proxy.php [L,QSA]
+
+  # Standard SPA routing
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.html [L]
+</IfModule>

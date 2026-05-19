@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /posutto/api/
+Disallow: /posutto/dashboard/
+Disallow: /posutto/admin/
+
+Sitemap: https://sns-tool.online/posutto/sitemap.xml
