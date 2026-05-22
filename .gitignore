@@ -60,3 +60,10 @@ server/upload_xserver.sh
 server/yarn.tar.gz
 server/yarn_install_final.php
 server/yarn_install_v2.php
+
+# Archives, backups, OS files, server logs
+*.tar.gz
+*.bak
+**/.DS_Store
+server/server.log
+server/server_debug.log
