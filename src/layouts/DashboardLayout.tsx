@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
@@ -7,6 +7,10 @@ import { useAuth } from '../lib/auth';
 export default function DashboardLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { user } = useAuth();
+
+    // Stable identity so Sidebar's route-change effect can depend on it safely.
+    const closeSidebar = useCallback(() => setSidebarOpen(false), []);
+    const openSidebar = useCallback(() => setSidebarOpen(true), []);
 
     return (
         <div className="min-h-screen bg-gray-50/50">
@@ -27,7 +31,7 @@ export default function DashboardLayout() {
             */}
             <Sidebar
                 isOpen={sidebarOpen}
-                onClose={() => setSidebarOpen(false)}
+                onClose={closeSidebar}
             />
 
             {/* Main Content Wrapper: 
@@ -35,7 +39,7 @@ export default function DashboardLayout() {
                 - This ensures header and main content do not overlap the fixed sidebar.
             */}
             <div className={`lg:pl-72 flex flex-col min-h-screen transition-all duration-300 ${user?.isDemo ? 'pt-10' : ''}`}>
-                <Header onMenuClick={() => setSidebarOpen(true)} />
+                <Header onMenuClick={openSidebar} />
 
                 <main className="flex-1 py-10">
                     <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">

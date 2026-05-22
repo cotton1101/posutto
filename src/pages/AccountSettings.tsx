@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     UserPlus,
     Shield,
@@ -26,6 +26,24 @@ import { useAuth } from '../lib/auth';
 import { authFetch, authJsonFetch } from '../lib/authFetch';
 import { API_BASE } from '../config';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mapAccountFromDb = (dbAcc: any): Account => ({
+    id: dbAcc.id,
+    name: dbAcc.name,
+    screenName: dbAcc.screen_name,
+    username: dbAcc.username,
+    password: dbAcc.password,
+    email: dbAcc.email,
+    phoneNumber: dbAcc.phone_number,
+    status: dbAcc.status,
+    avatarUrl: dbAcc.profile_image_url,
+    apiKey: dbAcc.api_key,
+    apiSecret: dbAcc.api_secret,
+    accessToken: dbAcc.access_token,
+    accessTokenSecret: dbAcc.access_secret,
+    bearerToken: dbAcc.bearer_token
+});
+
 export default function AccountSettings() {
     const { user } = useAuth();
     const [accounts, setAccounts] = useState<Account[]>([]);
@@ -34,25 +52,7 @@ export default function AccountSettings() {
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mapAccountFromDb = (dbAcc: any): Account => ({
-        id: dbAcc.id,
-        name: dbAcc.name,
-        screenName: dbAcc.screen_name,
-        username: dbAcc.username,
-        password: dbAcc.password,
-        email: dbAcc.email,
-        phoneNumber: dbAcc.phone_number,
-        status: dbAcc.status,
-        avatarUrl: dbAcc.profile_image_url,
-        apiKey: dbAcc.api_key,
-        apiSecret: dbAcc.api_secret,
-        accessToken: dbAcc.access_token,
-        accessTokenSecret: dbAcc.access_secret,
-        bearerToken: dbAcc.bearer_token
-    });
-
-    const fetchAccounts = async () => {
+    const fetchAccounts = useCallback(async () => {
         if (!user?.email) return;
         setIsLoading(true);
         try {
@@ -66,11 +66,11 @@ export default function AccountSettings() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [user?.email]);
 
     React.useEffect(() => {
         fetchAccounts();
-    }, [user?.email]);
+    }, [fetchAccounts]);
 
     // API Test State
     const [testingAccountId, setTestingAccountId] = useState<string | null>(null);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Check, Bot, Zap, Crown, Star, Loader2, AlertCircle, CheckCircle2, X, ArrowRight, ArrowDown, Calendar } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import type { PlanType, SubscriptionInfo } from '../types/plans';
@@ -39,25 +39,7 @@ export default function Shop() {
     const [prorationTargetPlan, setProrationTargetPlan] = useState<PlanType | null>(null);
     const [upgradeProcessing, setUpgradeProcessing] = useState(false);
 
-    // Check URL params for success/cancel callbacks from Stripe
-    useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('success') === 'true') {
-            setSuccessMessage('決済が完了しました！プランが有効化されています。');
-            window.history.replaceState({}, '', window.location.pathname);
-            setTimeout(() => fetchSubscriptionStatus(), 2000);
-        }
-        if (params.get('canceled') === 'true') {
-            setError('決済がキャンセルされました。');
-            window.history.replaceState({}, '', window.location.pathname);
-        }
-    }, []);
-
-    useEffect(() => {
-        fetchSubscriptionStatus();
-    }, [user?.email]);
-
-    const fetchSubscriptionStatus = async () => {
+    const fetchSubscriptionStatus = useCallback(async () => {
         if (!user?.email) return;
         try {
             const res = await authFetch(`${API_BASE}/api/stripe/subscription-status`);
@@ -73,7 +55,25 @@ export default function Shop() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [user, updateUser]);
+
+    // Check URL params for success/cancel callbacks from Stripe
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('success') === 'true') {
+            setSuccessMessage('決済が完了しました！プランが有効化されています。');
+            window.history.replaceState({}, '', window.location.pathname);
+            setTimeout(() => fetchSubscriptionStatus(), 2000);
+        }
+        if (params.get('canceled') === 'true') {
+            setError('決済がキャンセルされました。');
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+    }, [fetchSubscriptionStatus]);
+
+    useEffect(() => {
+        fetchSubscriptionStatus();
+    }, [fetchSubscriptionStatus]);
 
     // -----------------------------------------------------------------------
     // Plan selection handler

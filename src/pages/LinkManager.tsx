@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     Plus,
     Link as LinkIcon,
@@ -32,7 +32,7 @@ export default function LinkManager() {
     const [links, setLinks] = useState<Link[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    const fetchLinks = async () => {
+    const fetchLinks = useCallback(async () => {
         if (!user?.email) return;
         setIsLoading(true);
         try {
@@ -45,11 +45,11 @@ export default function LinkManager() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [user?.email]);
 
     useEffect(() => {
         fetchLinks();
-    }, [user?.email]);
+    }, [fetchLinks]);
 
     const handleDelete = async (id: string) => {
         if (confirm('このリンクを削除してもよろしいですか？')) {

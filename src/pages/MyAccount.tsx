@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import { Button } from '../components/ui/Button';
@@ -41,11 +41,7 @@ export default function MyAccount() {
     const [subMessage, setSubMessage] = useState<string | null>(null);
     const [subError, setSubError] = useState<string | null>(null);
 
-    useEffect(() => {
-        fetchSubscriptionStatus();
-    }, [user?.email]);
-
-    const fetchSubscriptionStatus = async () => {
+    const fetchSubscriptionStatus = useCallback(async () => {
         if (!user?.email) return;
         try {
             const res = await authFetch(`${API_BASE}/api/stripe/subscription-status`);
@@ -61,7 +57,11 @@ export default function MyAccount() {
         } finally {
             setSubLoading(false);
         }
-    };
+    }, [user, updateUser]);
+
+    useEffect(() => {
+        fetchSubscriptionStatus();
+    }, [fetchSubscriptionStatus]);
 
     const handleCancelSubscription = async () => {
         if (!confirm('サブスクリプションをキャンセルしますか？\n現在の請求期間の終了時にフリープランに戻ります。')) return;

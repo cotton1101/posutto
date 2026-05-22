@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Minimal type stubs for the external `sql.js` library. The upstream API is
+// inherently dynamic, so `any` is intentional here.
 declare module 'sql.js' {
     interface QueryExecResult {
         columns: string[];

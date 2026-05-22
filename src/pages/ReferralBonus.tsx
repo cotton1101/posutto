@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Gift, Download, FileText, ArrowRight } from 'lucide-react';
 import { Button } from '../components/ui/Button';
@@ -19,12 +19,7 @@ export default function ReferralBonus() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (!code) return;
-        fetchBonus();
-    }, [code]);
-
-    const fetchBonus = async () => {
+    const fetchBonus = useCallback(async () => {
         try {
             const res = await fetch(`${API_BASE}/api/referral/bonus/${code}`);
             const data = await parseJson(res);
@@ -38,7 +33,12 @@ export default function ReferralBonus() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [code]);
+
+    useEffect(() => {
+        if (!code) return;
+        fetchBonus();
+    }, [code, fetchBonus]);
 
     const handleDownload = () => {
         window.open(`${API_BASE}/api/referral/bonus/download/${code}`, '_blank');
