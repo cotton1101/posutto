@@ -14,6 +14,7 @@ import {
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { API_BASE } from '../config';
+import { parseJson } from '../lib/authFetch';
 
 type InquiryCategory = 'feedback' | 'bug' | 'question' | 'other';
 
@@ -34,7 +35,7 @@ export default function Support() {
         try {
             const res = await fetch(`${API_BASE}/api/auth/captcha`);
             if (res.ok) {
-                const data = await res.json();
+                const data = await parseJson(res);
                 setCaptcha(data);
                 setCaptchaAnswer('');
             }
@@ -72,7 +73,7 @@ export default function Support() {
                 })
             });
 
-            const result = await res.json();
+            const result = await parseJson(res);
 
             if (res.ok && result.success) {
                 setSubmitted(true);
@@ -80,8 +81,8 @@ export default function Support() {
                 setError(result.error || '送信に失敗しました。再度お試しください。');
                 fetchCaptcha();
             }
-        } catch {
-            setError('ネットワークエラーが発生しました。再度お試しください。');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'ネットワークエラーが発生しました。再度お試しください。');
             fetchCaptcha();
         } finally {
             setIsLoading(false);

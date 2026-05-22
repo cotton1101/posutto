@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { API_BASE } from '../config';
+import { parseJson } from '../lib/authFetch';
 import { ArrowLeft, Mail, KeyRound, CheckCircle2 } from 'lucide-react';
 
 type Step = 'email' | 'code' | 'done';
@@ -29,7 +30,7 @@ export default function ForgotPassword() {
                 body: JSON.stringify({ email }),
             });
 
-            const data = await res.json();
+            const data = await parseJson(res);
             if (!res.ok) throw new Error(data.error || 'エラーが発生しました');
 
             setStep('code');
@@ -63,7 +64,7 @@ export default function ForgotPassword() {
                 body: JSON.stringify({ email, code, newPassword }),
             });
 
-            const data = await res.json();
+            const data = await parseJson(res);
             if (!res.ok) throw new Error(data.error || 'エラーが発生しました');
 
             setStep('done');

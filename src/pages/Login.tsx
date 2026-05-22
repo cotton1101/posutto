@@ -4,6 +4,7 @@ import { useAuth } from '../lib/auth';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { API_BASE } from '../config';
+import { parseJson } from '../lib/authFetch';
 
 export default function Login() {
     const navigate = useNavigate();
@@ -21,7 +22,7 @@ export default function Login() {
         try {
             const response = await fetch(`${API_BASE}/api/auth/captcha`);
             if (response.ok) {
-                const data = await response.json();
+                const data = await parseJson(response);
                 setCaptcha(data);
             }
         } catch (error) {

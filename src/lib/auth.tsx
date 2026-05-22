@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { PlanType } from '../types/plans';
 import { API_BASE } from '../config';
+import { parseJson } from './authFetch';
 
 export type UserRole = 'admin' | 'user';
 
@@ -72,12 +73,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 body: JSON.stringify({ email, password, captchaId, captchaAnswer }),
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'ログインに失敗しました。');
-            }
+            const data = await parseJson(response);
 
-            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'ログインに失敗しました。');
+            }
 
             if (data.require2FA) {
                 return {
@@ -109,12 +109,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 body: JSON.stringify({ email, code }),
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || '認証に失敗しました。');
-            }
+            const data = await parseJson(response);
 
-            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || '認証に失敗しました。');
+            }
             if (data.token) {
                 saveToken(data.token);
             }
@@ -136,12 +135,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 body: JSON.stringify({ email, password, name, referralCode: referralCode || undefined }),
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || '登録に失敗しました。');
-            }
+            const data = await parseJson(response);
 
-            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || '登録に失敗しました。');
+            }
             if (data.token) {
                 saveToken(data.token);
             }
@@ -193,12 +191,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     body: JSON.stringify({ email: user.email, plan }),
                 });
 
+                const data = await parseJson(response);
                 if (response.ok) {
                     const updatedUser = { ...user, plan };
                     setUser(updatedUser);
                     localStorage.setItem('posutto_user', JSON.stringify(updatedUser));
                 } else {
-                    throw new Error('プラン変更に失敗しました。');
+                    throw new Error(data.error || 'プラン変更に失敗しました。');
                 }
             } catch (error) {
                 console.error('Plan update failed:', error);

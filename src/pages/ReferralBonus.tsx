@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Gift, Download, FileText, ArrowRight } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { API_BASE } from '../config';
+import { parseJson } from '../lib/authFetch';
 
 interface BonusData {
     referrerName: string;
@@ -26,12 +27,11 @@ export default function ReferralBonus() {
     const fetchBonus = async () => {
         try {
             const res = await fetch(`${API_BASE}/api/referral/bonus/${code}`);
+            const data = await parseJson(res);
             if (res.ok) {
-                const data = await res.json();
                 setBonus(data);
             } else {
-                const err = await res.json();
-                setError(err.error || '特典が見つかりませんでした。');
+                setError(data.error || '特典が見つかりませんでした。');
             }
         } catch {
             setError('読み込みに失敗しました。');
