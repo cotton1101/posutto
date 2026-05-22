@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X, AlertCircle, CheckCircle, Info, AlertTriangle, RefreshCw } from 'lucide-react';
 import { authFetch } from '../lib/authFetch';
 import { API_BASE } from '../config';
@@ -79,12 +79,7 @@ export default function BotLogViewer({ botId, botName, isOpen, onClose }: BotLog
     const [isLoading, setIsLoading] = useState(false);
     const [filterType, setFilterType] = useState<string>('all');
 
-    useEffect(() => {
-        if (!isOpen || !botId) return;
-        fetchLogs();
-    }, [isOpen, botId, filterType]);
-
-    const fetchLogs = async () => {
+    const fetchLogs = useCallback(async () => {
         if (!botId) return;
         setIsLoading(true);
         try {
@@ -99,7 +94,12 @@ export default function BotLogViewer({ botId, botName, isOpen, onClose }: BotLog
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [botId, filterType]);
+
+    useEffect(() => {
+        if (!isOpen || !botId) return;
+        fetchLogs();
+    }, [isOpen, botId, fetchLogs]);
 
     if (!isOpen) return null;
 

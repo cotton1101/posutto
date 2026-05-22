@@ -30,7 +30,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     // モバイルでページ遷移した時にサイドバーを自動的に閉じる
     useEffect(() => {
         onClose();
-    }, [location.pathname]);
+    }, [location.pathname, onClose]);
 
     const navigation = [
         { name: 'ダッシュボード', href: '/dashboard', icon: LayoutDashboard },

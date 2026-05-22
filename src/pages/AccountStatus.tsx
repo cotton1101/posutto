@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     Activity,
     TrendingUp,
@@ -36,6 +36,41 @@ export default function AccountStatus() {
     const [shadowbanResults, setShadowbanResults] = useState<{ [screenName: string]: ShadowbanStatus }>({});
     const [checkingShadowban, setCheckingShadowban] = useState<{ [screenName: string]: boolean }>({});
 
+    const updateHistory = useCallback((screenName: string, currentCount: number) => {
+        setHistory(prev => {
+            const lastData = prev[screenName];
+            const today = new Date().toISOString().split('T')[0];
+
+            // If lastUpdate !== today, keep the stored count as the baseline for the daily change.
+            const newHistory = { ...prev };
+            if (!lastData) {
+                newHistory[screenName] = { count: currentCount, lastUpdate: today };
+            } else if (lastData.lastUpdate !== today) {
+                newHistory[screenName] = { ...lastData, lastUpdate: today };
+            }
+
+            localStorage.setItem(FOLLOWER_HISTORY_KEY, JSON.stringify(newHistory));
+            return newHistory;
+        });
+    }, []);
+
+    const fetchProfile = useCallback(async (accountId: string, screenName: string) => {
+        setLoading(prev => ({ ...prev, [accountId]: true }));
+        try {
+            const data = await fetchXUserProfileByAccountId(accountId);
+            if (!data) throw new Error("Failed to fetch profile");
+
+            setProfiles(prev => ({ ...prev, [accountId]: data }));
+
+            // Update history if it's a new day or first time (keyed by screenName for consistency)
+            updateHistory(screenName, data.followersCount);
+        } catch (error) {
+            console.error(`Error fetching profile for ${screenName} (id: ${accountId}):`, error);
+        } finally {
+            setLoading(prev => ({ ...prev, [accountId]: false }));
+        }
+    }, [updateHistory]);
+
     useEffect(() => {
         const fetchAccounts = async () => {
             if (!user?.email) return;
@@ -68,24 +103,7 @@ export default function AccountStatus() {
         if (storedHistory) {
             setHistory(JSON.parse(storedHistory));
         }
-    }, [user?.email]);
-
-    const fetchProfile = async (accountId: string, screenName: string) => {
-        setLoading(prev => ({ ...prev, [accountId]: true }));
-        try {
-            const data = await fetchXUserProfileByAccountId(accountId);
-            if (!data) throw new Error("Failed to fetch profile");
-
-            setProfiles(prev => ({ ...prev, [accountId]: data }));
-
-            // Update history if it's a new day or first time (keyed by screenName for consistency)
-            updateHistory(screenName, data.followersCount);
-        } catch (error) {
-            console.error(`Error fetching profile for ${screenName} (id: ${accountId}):`, error);
-        } finally {
-            setLoading(prev => ({ ...prev, [accountId]: false }));
-        }
-    };
+    }, [user?.email, fetchProfile]);
 
     const handleCheckShadowban = async (screenName: string) => {
         setCheckingShadowban(prev => ({ ...prev, [screenName]: true }));
@@ -99,30 +117,6 @@ export default function AccountStatus() {
         } finally {
             setCheckingShadowban(prev => ({ ...prev, [screenName]: false }));
         }
-    };
-
-    const updateHistory = (screenName: string, currentCount: number) => {
-        setHistory(prev => {
-            const lastData = prev[screenName];
-            const today = new Date().toISOString().split('T')[0];
-
-            // If no history or last update was before today, keep the old count as the baseline for "daily change"
-            // and update the lastUpdate to today but we need to keep the "previous" count for calculation.
-            // Simplified: if lastUpdate !== today, the current "count" in history is yesterday's final count.
-
-            const newHistory = { ...prev };
-            if (!lastData) {
-                newHistory[screenName] = { count: currentCount, lastUpdate: today };
-            } else if (lastData.lastUpdate !== today) {
-                // Keep the old count for today's comparison, but mark it as updated today
-                // Actually, to show "1 day change", we need the count from roughly 24h ago.
-                // For this mock/simple version, we'll just store the count when they first open it each day.
-                newHistory[screenName] = { ...lastData, lastUpdate: today };
-            }
-
-            localStorage.setItem(FOLLOWER_HISTORY_KEY, JSON.stringify(newHistory));
-            return newHistory;
-        });
     };
 
     const getFollowerChange = (screenName: string, currentCount: number) => {

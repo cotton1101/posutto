@@ -54,3 +54,51 @@ export async function authJsonFetch(url: string, method: string, body?: unknown)
         body: body ? JSON.stringify(body) : undefined,
     });
 }
+
+/**
+ * Reads a fetch Response body as JSON safely.
+ *
+ * When the API proxy / Node backend is down (or not deployed), requests to
+ * `/api/*` fall back to the SPA's `index.html`. Calling `response.json()` on
+ * that HTML throws the cryptic `Unexpected token '<', "<!doctype "... is not
+ * valid JSON`. This helper detects non-JSON bodies and throws a clear,
+ * actionable message instead, while logging the real response for debugging.
+ *
+ * Returns the parsed JSON for both successful and error responses; callers
+ * still inspect `response.ok` themselves to decide how to use the value.
+ */
+export async function parseJson(response: Response) {
+    const text = await response.text();
+    const trimmed = text.trim();
+
+    // Empty body
+    if (trimmed.length === 0) {
+        if (!response.ok) {
+            throw new Error(`サーバーエラー (HTTP ${response.status})。時間をおいて再度お試しください。`);
+        }
+        return {};
+    }
+
+    // HTML / non-JSON body (index.html fallback, 403/404/500 error page, etc.)
+    const contentType = response.headers.get('content-type') || '';
+    if (trimmed.startsWith('<') || (contentType && !contentType.includes('json'))) {
+        console.error('[parseJson] Expected JSON but received non-JSON response:', {
+            status: response.status,
+            url: response.url,
+            contentType,
+            preview: trimmed.slice(0, 160),
+        });
+        throw new Error(
+            `サーバーAPIに接続できませんでした (HTTP ${response.status})。` +
+            `APIがJSONではなくHTMLを返しています。サーバー（プロキシ/Node）が起動しているかご確認ください。`
+        );
+    }
+
+    // Looks like JSON — parse it
+    try {
+        return JSON.parse(text);
+    } catch {
+        console.error('[parseJson] Failed to parse JSON body:', trimmed.slice(0, 160));
+        throw new Error(`サーバーから不正な応答が返されました (HTTP ${response.status})。`);
+    }
+}
