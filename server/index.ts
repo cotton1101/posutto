@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
 import path from 'path';
@@ -119,6 +120,17 @@ const __dirname = path.dirname(__filename_idx);
 
 const app = express();
 const port = process.env.PORT || 3001;
+
+// Trust the first proxy hop (nginx/Apache reverse proxy on Xserver) so that
+// req.ip reflects the real client address used by the rate limiters.
+app.set('trust proxy', 1);
+
+// Baseline security headers. CSP and COEP are disabled for now so they don't
+// break the SPA or Stripe iframes; tighten with an explicit policy later.
+app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+}));
 
 app.use(cors({
     origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
